@@ -59,10 +59,10 @@
     }
 
     this.each(function () {
-      var self = this, $self = $(self), firstCharTime = 0, lastCharTime = 0, stringWriting = '', callIsScanner = false, testTimer = false, scanButtonCounter = 0;
+      var self = this, $self = $(self), firstCharTime = 0, lastCharTime = 0, scannedString = '', isScanningComplete = false, testTimer = false, scanButtonCounter = 0;
       var initScannerDetection = function () {
         firstCharTime = 0;
-        stringWriting = '';
+        scannedString = '';
         scanButtonCounter = 0;
       };
 
@@ -89,7 +89,7 @@
         // If string is given, test it
         if (s) {
           firstCharTime = lastCharTime = 0;
-          stringWriting = s;
+          scannedString = s;
         }
 
         if (!scanButtonCounter) {
@@ -98,15 +98,15 @@
 
         // If all condition are good (length, time...), call the callback and re-initialize the plugin for next scanning
         // Else, just re-initialize
-        if (stringWriting.length >= options.minLength && lastCharTime - firstCharTime < stringWriting.length * options.avgTimeByChar) {
-          if (options.onScanButtonLongPressed && scanButtonCounter > options.scanButtonLongPressThreshold) options.onScanButtonLongPressed.call(self, stringWriting, scanButtonCounter);
-          else if (options.onComplete) options.onComplete.call(self, stringWriting, scanButtonCounter);
-          $self.trigger('scannerDetectionComplete', { string: stringWriting });
+        if (scannedString.length >= options.minLength && lastCharTime - firstCharTime < scannedString.length * options.avgTimeByChar) {
+          if (options.onScanButtonLongPressed && scanButtonCounter > options.scanButtonLongPressThreshold) options.onScanButtonLongPressed.call(self, scannedString, scanButtonCounter);
+          else if (options.onComplete) options.onComplete.call(self, scannedString, scanButtonCounter);
+          $self.trigger('scannerDetectionComplete', { string: scannedString });
           initScannerDetection();
           return true;
         } else {
-          if (options.onError) options.onError.call(self, stringWriting);
-          $self.trigger('scannerDetectionError', { string: stringWriting });
+          if (options.onError) options.onError.call(self, scannedString);
+          $self.trigger('scannerDetectionError', { string: scannedString });
           initScannerDetection();
           return false;
         }
@@ -149,16 +149,16 @@
           if (firstCharTime && options.endChar.indexOf(e.which) !== -1) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            callIsScanner = true;
+            isScanningComplete = true;
           } else if (!firstCharTime && options.startChar.indexOf(e.which) !== -1) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            callIsScanner = false;
+            isScanningComplete = false;
           } else {
             if (typeof (e.which) != 'undefined') {
-              stringWriting += String.fromCharCode(e.which);
+              scannedString += String.fromCharCode(e.which);
             }
-            callIsScanner = false;
+            isScanningComplete = false;
           }
 
           if (!firstCharTime) {
@@ -167,7 +167,7 @@
           lastCharTime = Date.now();
 
           if (testTimer) clearTimeout(testTimer);
-          if (callIsScanner) {
+          if (isScanningComplete) {
             self.scannerDetectionTest();
             testTimer = false;
           } else {
